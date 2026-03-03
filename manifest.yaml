@@ -1,9 +1,9 @@
 manifestVersion: 1
 name: "@keeb/alpine"
-version: "2026.03.02.2"
+version: "2026.03.02.3"
 description: "Alpine Linux disk install + overlay packaging (https://github.com/keeb/swamp-alpine)"
 repository: https://github.com/keeb/swamp-alpine
-tags:
+labels:
   - alpine
   - linux
   - infrastructure
