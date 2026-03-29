@@ -39,7 +39,7 @@ DISKOPTS="-m sys ${disk}"
 }
 
 export const model = {
-  type: "@user/alpine/install",
+  type: "@keeb/alpine/install",
   version: "2026.02.11.1",
   resources: {
     "result": {

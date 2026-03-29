@@ -1,5 +1,5 @@
 id: 865bb9bf-9008-4a1d-8b8a-f9445b9aa3c9
-name: deploy-apkovl
+name: '@keeb/deploy-apkovl'
 description: Package gold-image overlay and deploy to TFTP server
 jobs:
   - name: main

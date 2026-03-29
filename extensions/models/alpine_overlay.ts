@@ -22,7 +22,7 @@ const OverlaySchema = z.object({
 });
 
 export const model = {
-  type: "@user/alpine/overlay",
+  type: "@keeb/alpine/overlay",
   version: "2026.02.11.1",
   resources: {
     "overlay": {
