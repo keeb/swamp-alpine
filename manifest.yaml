@@ -1,6 +1,6 @@
 manifestVersion: 1
-name: "@keeb/alpine"
-version: "2026.03.02.3"
+name: "@swampadmin/alpine"
+version: "2026.04.06.1"
 description: "Alpine Linux disk install + overlay packaging (https://github.com/keeb/swamp-alpine)"
 repository: https://github.com/keeb/swamp-alpine
 labels:
@@ -10,8 +10,12 @@ labels:
 models:
   - alpine_install.ts
   - alpine_overlay.ts
+  - alpine_packages.ts
 workflows:
   - create-stateful-vm/workflow.yaml
   - deploy-apkovl/workflow.yaml
+  - provision-packages/workflow.yaml
+skills:
+  - alpine
 dependencies:
-  - "@keeb/proxmox"
+  - "@swampadmin/proxmox"

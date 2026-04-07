@@ -13,4 +13,8 @@
 .swamp/vault/**/.key
 
 # Claude Code
-.claude/
+.claude/*
+# Allow embedded extension skills (packaged with the extension)
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/alpine/
