@@ -37,6 +37,39 @@ Package and deploy Alpine overlay files (apkovl) for diskless PXE boot.
 swamp extension pull @keeb/alpine
 ```
 
+## Example
+
+Install Alpine to disk on a PXE-booted VM, then install and enable services:
+
+```yaml
+models:
+  - name: install
+    type: "@keeb/alpine/install"
+    globalArguments:
+      sshHost: "10.0.0.42"
+      sshUser: "root"
+  - name: packages
+    type: "@keeb/alpine/packages"
+    globalArguments:
+      sshHost: "10.0.0.42"
+      sshUser: "root"
+
+jobs:
+  - name: bootstrap
+    steps:
+      - model: install
+        method: install
+        inputs:
+          hostname: "web01"
+          password: "${vault.alpine.rootPassword}"
+          disk: "/dev/sda"
+      - model: packages
+        method: provision
+        inputs:
+          packages: ["docker", "docker-openrc", "curl"]
+          services: ["docker"]
+```
+
 ## License
 
 MIT

@@ -60,7 +60,7 @@ jobs:
               type: succeeded
         weight: 0
       - name: install-alpine
-        description: Install Alpine to disk via setup-alpine + post-install chroot
+        description: Install Alpine to disk via setup-alpine with post-install chroot setup
         task:
           type: model_method
           modelIdOrName: alpineInstaller

@@ -1,8 +1,12 @@
 manifestVersion: 1
-name: "@swampadmin/alpine"
-version: "2026.04.06.1"
+name: "@keeb/alpine"
+version: "2026.05.25.1"
 description: "Alpine Linux disk install + overlay packaging (https://github.com/keeb/swamp-alpine)"
 repository: https://github.com/keeb/swamp-alpine
+additionalFiles:
+  - README.md
+  - LICENSE.txt
+platforms: []
 labels:
   - alpine
   - linux
@@ -18,4 +22,4 @@ workflows:
 skills:
   - alpine
 dependencies:
-  - "@swampadmin/proxmox"
+  - "@keeb/proxmox"

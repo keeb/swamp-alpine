@@ -1,8 +1,15 @@
+/**
+ * @keeb/alpine/overlay model — package an Alpine diskless overlay on
+ * a gold-image VM via `lbu package` and deploy the resulting apkovl.tar.gz
+ * to a TFTP server for PXE-booted clients to pick up.
+ */
 import { z } from "npm:zod@4";
 import { sshExec } from "./lib/ssh.ts";
 
 const GlobalArgs = z.object({
-  sshHost: z.string().describe("SSH hostname/IP of the VM running Alpine (set via CEL from lookupVm/ensureVmRunning)"),
+  sshHost: z.string().describe(
+    "SSH hostname/IP of the VM running Alpine (set via CEL from lookupVm/ensureVmRunning)",
+  ),
   sshUser: z.string().default("root").describe("SSH user (default 'root')"),
 });
 
@@ -21,9 +28,16 @@ const OverlaySchema = z.object({
   timestamp: z.string(),
 });
 
-export const model = {
+/** Swamp model definition for `@keeb/alpine/overlay`. */
+export const model: {
+  type: string;
+  version: string;
+  resources: Record<string, unknown>;
+  globalArguments: typeof GlobalArgs;
+  methods: Record<string, unknown>;
+} = {
   type: "@keeb/alpine/overlay",
-  version: "2026.02.11.1",
+  version: "2026.03.29.2",
   resources: {
     "overlay": {
       description: "Overlay deployment result",
@@ -35,17 +49,28 @@ export const model = {
   globalArguments: GlobalArgs,
   methods: {
     deployApkovl: {
-      description: "Package the Alpine overlay on a VM via lbu and deploy it to the TFTP server",
+      description:
+        "Package the Alpine overlay on a VM via lbu and deploy it to the TFTP server",
       arguments: DeployApkovlArgs,
       execute: async (args, context) => {
         const { tftpHost, tftpPath } = args;
         const { sshHost, sshUser = "root" } = context.globalArgs;
 
-        if (!sshHost) throw new Error("sshHost is required — run ensureVmRunning first to populate the VM IP");
-        if (!tftpHost) throw new Error("tftpHost is required for apkovl deployment");
-        if (!tftpPath) throw new Error("tftpPath is required for apkovl deployment");
+        if (!sshHost) {
+          throw new Error(
+            "sshHost is required — run ensureVmRunning first to populate the VM IP",
+          );
+        }
+        if (!tftpHost) {
+          throw new Error("tftpHost is required for apkovl deployment");
+        }
+        if (!tftpPath) {
+          throw new Error("tftpPath is required for apkovl deployment");
+        }
 
-        console.log(`[deployApkovl] VM: ${sshHost}, TFTP: ${tftpHost}:${tftpPath}`);
+        console.log(
+          `[deployApkovl] VM: ${sshHost}, TFTP: ${tftpHost}:${tftpPath}`,
+        );
 
         // Step 1: Get hostname from the VM
         console.log(`[deployApkovl] Step 1: Getting hostname from VM...`);
@@ -54,6 +79,7 @@ export const model = {
         console.log(`[deployApkovl] Hostname: ${hostname}`);
 
         const overlayFile = `${hostname}.apkovl.tar.gz`;
+        console.log(`[deployApkovl] Overlay filename: ${overlayFile}`);
         const remotePath = `/tmp/${overlayFile}`;
 
         // Step 2: Package overlay via lbu
@@ -62,12 +88,16 @@ export const model = {
         console.log(`[deployApkovl] Overlay packaged: ${remotePath}`);
 
         // Step 3: SCP overlay from VM to local /tmp
-        console.log(`[deployApkovl] Step 3: Copying overlay from VM to local /tmp...`);
+        console.log(
+          `[deployApkovl] Step 3: Copying overlay from VM to local /tmp...`,
+        );
         // @ts-ignore - Deno API
         const scpDown = new Deno.Command("scp", {
           args: [
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
             `${sshUser}@${sshHost}:${remotePath}`,
             `/tmp/${overlayFile}`,
           ],
@@ -81,12 +111,16 @@ export const model = {
 
         // Step 4: SCP overlay from local to TFTP server
         const tftpTarget = `${tftpPath}/alpine.apkovl.tar.gz`;
-        console.log(`[deployApkovl] Step 4: Deploying overlay to TFTP server ${tftpHost}:${tftpTarget}...`);
+        console.log(
+          `[deployApkovl] Step 4: Deploying overlay to TFTP server ${tftpHost}:${tftpTarget}...`,
+        );
         // @ts-ignore - Deno API
         const scpUp = new Deno.Command("scp", {
           args: [
-            "-o", "StrictHostKeyChecking=no",
-            "-o", "UserKnownHostsFile=/dev/null",
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
             `/tmp/${overlayFile}`,
             `root@${tftpHost}:${tftpTarget}`,
           ],
@@ -96,7 +130,9 @@ export const model = {
           const err = new TextDecoder().decode(scpUpResult.stderr);
           throw new Error(`SCP to TFTP server failed: ${err}`);
         }
-        console.log(`[deployApkovl] Overlay deployed to ${tftpHost}:${tftpTarget}`);
+        console.log(
+          `[deployApkovl] Overlay deployed to ${tftpHost}:${tftpTarget}`,
+        );
 
         // Cleanup local temp file
         try {

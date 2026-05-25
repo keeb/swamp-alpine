@@ -1,17 +1,17 @@
 ---
 name: alpine
-description: Install and provision Alpine Linux on Proxmox VMs via swamp. Use when the user wants to PXE-install Alpine to disk with setup-alpine, package and deploy an apkovl overlay (lbu package) for diskless boot, or apk-install packages and enable OpenRC services on a running Alpine VM. Triggers on "install alpine", "alpine setup", "setup-alpine", "apkovl", "lbu package", "apk add", "rc-update", "alpine pxe", "alpine overlay", "provision alpine packages", "@swampadmin/alpine/install", "@swampadmin/alpine/overlay", "@swampadmin/alpine/packages", "create-stateful-vm", "deploy-apkovl", or "provision-packages".
+description: Install and provision Alpine Linux on Proxmox VMs via swamp. Use when the user wants to PXE-install Alpine to disk with setup-alpine, package and deploy an apkovl overlay (lbu package) for diskless boot, or apk-install packages and enable OpenRC services on a running Alpine VM. Triggers on "install alpine", "alpine setup", "setup-alpine", "apkovl", "lbu package", "apk add", "rc-update", "alpine pxe", "alpine overlay", "provision alpine packages", "@keeb/alpine/install", "@keeb/alpine/overlay", "@keeb/alpine/packages", "create-stateful-vm", "deploy-apkovl", or "provision-packages".
 ---
 
 # alpine
 
 Swamp extension for installing and provisioning Alpine Linux on Proxmox VMs.
 Provides three models plus three workflows that orchestrate them with the
-`@swampadmin/proxmox` extension.
+`@keeb/proxmox` extension.
 
 ## Dependencies
 
-- `@swampadmin/proxmox` — required. Provides the `keebDev02` (auth) and `fleet`
+- `@keeb/proxmox` — required. Provides the `keebDev02` (auth) and `fleet`
   (VM lifecycle) models that every alpine workflow depends on.
 
 ## Models
@@ -19,7 +19,7 @@ Provides three models plus three workflows that orchestrate them with the
 All three models share the same `globalArguments` schema and require SSH
 reachability to the target VM.
 
-### `@swampadmin/alpine/install`
+### `@keeb/alpine/install`
 
 PXE-install Alpine to a persistent disk via `setup-alpine`, then post-install
 chroot setup (SSH keys, repos, qemu-guest-agent).
@@ -36,7 +36,7 @@ chroot setup (SSH keys, repos, qemu-guest-agent).
     set the root password.
 - **resources**: `result` (lifetime `infinite`, gc 10).
 
-### `@swampadmin/alpine/overlay`
+### `@keeb/alpine/overlay`
 
 Package an Alpine LBU overlay on a "gold-image" VM and deploy it to a TFTP
 server for diskless PXE boot.
@@ -50,7 +50,7 @@ server for diskless PXE boot.
     is always `alpine.apkovl.tar.gz` regardless of the VM hostname.
 - **resources**: `overlay` (lifetime `infinite`, gc 10).
 
-### `@swampadmin/alpine/packages`
+### `@keeb/alpine/packages`
 
 Install apk packages and optionally enable OpenRC services on a running Alpine
 VM.
@@ -64,7 +64,7 @@ VM.
 
 ## Workflows
 
-### `@swampadmin/create-stateful-vm`
+### `@keeb/create-stateful-vm`
 
 Inputs: `vmName`, `memory` (MB), `cores`, `diskSize` (GB).
 
@@ -72,12 +72,12 @@ Steps: `auth` (keebDev02) -> `fleet.create` -> `fleet.start` (PXE boot) ->
 `alpineInstaller.install` -> `fleet.setBootOrder order=scsi0;net0` ->
 `fleet.stop` -> `fleet.start` (boot from disk).
 
-### `@swampadmin/deploy-apkovl`
+### `@keeb/deploy-apkovl`
 
 No workflow inputs. Operates on a hard-coded `vmName: gold-image`. Steps: `auth`
 -> `fleet.start gold-image` -> `goldImageOverlay.deployApkovl`.
 
-### `@swampadmin/provision-packages`
+### `@keeb/provision-packages`
 
 Inputs: `vmName`, `packages[]`, optional `services[]`. Steps: `auth` ->
 `fleet.start` -> `alpinePackages.provision`.
@@ -92,18 +92,18 @@ canonical pattern:
 ```yaml
 models:
   - name: alpineInstaller
-    type: "@swampadmin/alpine/install"
+    type: "@keeb/alpine/install"
     globalArguments:
       sshHost: ${{ models.fleet.vms[inputs.vmName].ip }}
       sshUser: root
 
   - name: alpinePackages
-    type: "@swampadmin/alpine/packages"
+    type: "@keeb/alpine/packages"
     globalArguments:
       sshHost: ${{ models.fleet.vms[inputs.vmName].ip }}
 
   - name: goldImageOverlay
-    type: "@swampadmin/alpine/overlay"
+    type: "@keeb/alpine/overlay"
     globalArguments:
       sshHost: ${{ models.fleet.vms["gold-image"].ip }}
 ```
@@ -146,14 +146,14 @@ CEL expression can resolve. Every model throws
 
 ```bash
 # Provision a fresh stateful VM end-to-end
-swamp workflow run @swampadmin/create-stateful-vm \
+swamp workflow run @keeb/create-stateful-vm \
   --input vmName=db01 --input memory=4096 --input cores=2 --input diskSize=40
 
 # Refresh the diskless gold-image overlay
-swamp workflow run @swampadmin/deploy-apkovl
+swamp workflow run @keeb/deploy-apkovl
 
 # Add packages to a running VM
-swamp workflow run @swampadmin/provision-packages \
+swamp workflow run @keeb/provision-packages \
   --input vmName=db01 \
   --input 'packages=["postgresql","postgresql-contrib"]' \
   --input 'services=["postgresql"]'
